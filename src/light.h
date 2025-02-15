@@ -24,6 +24,30 @@ struct ShapeNode{
    ShapeNode* prev, *next;
 };
 
+#ifdef ENABLE_BVH
+struct AABB {
+    Vector min, max;
+    AABB() : min(INFINITY, INFINITY, INFINITY), max(-INFINITY, -INFINITY, -INFINITY) {}
+    
+    bool intersect(const Ray& ray) const {
+        Vector invDir(1.0/ray.direction.x, 1.0/ray.direction.y, 1.0/ray.direction.z);
+        Vector t0 = (min - ray.origin) * invDir;
+        Vector t1 = (max - ray.origin) * invDir;
+        double tmin = fmax(fmax(fmin(t0.x, t1.x), fmin(t0.y, t1.y)), fmin(t0.z, t1.z));
+        double tmax = fmin(fmin(fmax(t0.x, t1.x), fmax(t0.y, t1.y)), fmax(t0.z, t1.z));
+        return tmax >= tmin && tmax > 0;
+    }
+};
+
+class BVHNode {
+public:
+    AABB bounds;
+    BVHNode* left = nullptr;
+    BVHNode* right = nullptr;
+    std::vector<ShapeNode*> shapes;
+};
+#endif
+
 class Autonoma{
 public:
    Camera camera;
@@ -31,6 +55,15 @@ public:
    unsigned int depth;
    ShapeNode *listStart, *listEnd;
    LightNode *lightStart, *lightEnd;
+   
+#ifdef ENABLE_BVH
+   BVHNode* bvh_root = nullptr;
+   
+   void buildBVH();
+#endif
+
+   Shape* getIntersection(Ray r, double& time);
+
    Autonoma(const Camera &c);
    Autonoma(const Camera &c, Texture* tex);
    void addShape(Shape* s);

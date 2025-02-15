@@ -168,6 +168,7 @@ ImageTexture::ImageTexture(unsigned char* data, unsigned int ww, unsigned int hh
    h = hh;
 }
 
+// TODO(haocheng): parallel read ppm
 void ImageTexture::readPPM(FILE* f, const char* file){
    if (f == NULL){
       printf("File loading error!!! %s\n", file);
