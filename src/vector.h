@@ -1,3 +1,9 @@
+#pragma once
+
+#ifdef ENABLE_SIMD
+#include <immintrin.h>
+#endif
+
 #ifndef __VECTOR_H_INCLUDED__
 #define __VECTOR_H_INCLUDED__
 #define _USE_MATH_DEFINES
@@ -11,8 +17,9 @@
 class Vector{
 public:
   double x, y, z;
-  Vector(double a, double b, double c);
-  
+
+  Vector();
+  Vector(double x, double y, double z);
   
   void operator +=(const Vector);
   void operator -= (const Vector);
@@ -23,20 +30,23 @@ public:
   void operator /= (const float);
   void operator /= (const int);
   
-  Vector operator + (const Vector);
-  Vector operator - (const Vector);
-/*  Vector operator * (const Vector);*/
-  Vector operator * (const double);
-  Vector operator * (const float);
-  Vector operator * (const int);
-  Vector operator / (const double);
-  Vector operator / (const float);
-  Vector operator / (const int);
-  Vector cross(const Vector a);
+  Vector operator + (const Vector) const;
+  Vector operator - (const Vector) const;
+  Vector operator - () const;
+  Vector operator * (const double) const;
+  Vector operator * (const float) const;
+  Vector operator * (const int) const;
+  Vector operator / (const double) const;
+  Vector operator / (const float) const;
+  Vector operator / (const int) const;
+  Vector cross(const Vector) const;
   double mag2();
   double mag();
-  double dot(const Vector a);
-  Vector normalize();
+  double dot(const Vector) const;
+  Vector normalize() const;
+
+  static Vector min(const Vector& a, const Vector& b);
+  static Vector max(const Vector& a, const Vector& b);
 } ;
 
 class Ray{

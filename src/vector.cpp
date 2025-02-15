@@ -7,8 +7,103 @@
 #include <stddef.h>
 #include "vector.h"
 
-Vector::Vector(double a, double b, double c) : x(a), y(b), z(c) {
+Vector::Vector() : x(0), y(0), z(0) {}
+Vector::Vector(double x, double y, double z) : x(x), y(y), z(z) {}
+
+Vector Vector::operator-() const { 
+    return Vector(-x, -y, -z); 
 }
+
+Vector Vector::cross(const Vector& v) const {
+    return Vector(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);
+}
+
+Vector Vector::normalize() const {
+    double l = sqrt(dot(*this));
+    return Vector(x/l, y/l, z/l);
+}
+
+#ifdef ENABLE_SIMD
+Vector Vector::operator+(const Vector& v) const {
+    __m256d a = _mm256_setr_pd(x, y, z, 0);
+    __m256d b = _mm256_setr_pd(v.x, v.y, v.z, 0);
+    __m256d result = _mm256_add_pd(a, b);
+    double temp[4];
+    _mm256_store_pd(temp, result);
+    return Vector(temp[0], temp[1], temp[2]);
+}
+
+Vector Vector::operator-(const Vector& v) const {
+    __m256d a = _mm256_setr_pd(x, y, z, 0);
+    __m256d b = _mm256_setr_pd(v.x, v.y, v.z, 0);
+    __m256d result = _mm256_sub_pd(a, b);
+    double temp[4];
+    _mm256_store_pd(temp, result);
+    return Vector(temp[0], temp[1], temp[2]);
+}
+
+Vector Vector::operator*(double f) const {
+    __m256d a = _mm256_setr_pd(x, y, z, 0);
+    __m256d b = _mm256_set1_pd(f);
+    __m256d result = _mm256_mul_pd(a, b);
+    double temp[4];
+    _mm256_store_pd(temp, result);
+    return Vector(temp[0], temp[1], temp[2]);
+}
+
+double Vector::dot(const Vector& v) const {
+    __m256d a = _mm256_setr_pd(x, y, z, 0);
+    __m256d b = _mm256_setr_pd(v.x, v.y, v.z, 0);
+    __m256d result = _mm256_mul_pd(a, b);
+    double temp[4];
+    _mm256_store_pd(temp, result);
+    return temp[0] + temp[1] + temp[2];
+}
+
+Vector Vector::min(const Vector& a, const Vector& b) {
+    __m256d va = _mm256_setr_pd(a.x, a.y, a.z, 0);
+    __m256d vb = _mm256_setr_pd(b.x, b.y, b.z, 0);
+    __m256d result = _mm256_min_pd(va, vb);
+    double temp[4];
+    _mm256_store_pd(temp, result);
+    return Vector(temp[0], temp[1], temp[2]);
+}
+
+Vector Vector::max(const Vector& a, const Vector& b) {
+    __m256d va = _mm256_setr_pd(a.x, a.y, a.z, 0);
+    __m256d vb = _mm256_setr_pd(b.x, b.y, b.z, 0);
+    __m256d result = _mm256_max_pd(va, vb);
+    double temp[4];
+    _mm256_store_pd(temp, result);
+    return Vector(temp[0], temp[1], temp[2]);
+}
+
+#else
+Vector Vector::operator+(const Vector& v) const { 
+    return Vector(x + v.x, y + v.y, z + v.z); 
+}
+
+Vector Vector::operator-(const Vector& v) const { 
+    return Vector(x - v.x, y - v.y, z - v.z); 
+}
+
+Vector Vector::operator*(double f) const { 
+    return Vector(x * f, y * f, z * f); 
+}
+
+double Vector::dot(const Vector& v) const { 
+    return x * v.x + y * v.y + z * v.z; 
+}
+
+Vector Vector::min(const Vector& a, const Vector& b) {
+    return Vector(fmin(a.x, b.x), fmin(a.y, b.y), fmin(a.z, b.z));
+}
+
+Vector Vector::max(const Vector& a, const Vector& b) {
+    return Vector(fmax(a.x, b.x), fmax(a.y, b.y), fmax(a.z, b.z));
+}
+#endif
+
 void Vector::operator -= (const Vector rhs) {
    x-=rhs.x; y-=rhs.y; z-=rhs.z;
 }
@@ -34,17 +129,6 @@ void Vector::operator /= (const int rhs) {
    x/=rhs; y/=rhs; z/=rhs;
 }
 
-
-Vector Vector::operator - (const Vector rhs) {
-   return Vector(x-rhs.x, y-rhs.y, z-rhs.z);
-}
-Vector Vector::operator + (const Vector rhs) {
-   return Vector(x+rhs.x, y+rhs.y, z+rhs.z);
-}
-/*
-Vector Vector::operator * (const Vector a) {
-   return Vector(y*a.z-z*a.y, z*a.x-x*a.z, x*a.y-y*a.x);
-}*/
 Vector Vector::operator * (const double rhs) {
    return Vector(x*rhs, y*rhs, z*rhs);
 }
@@ -63,24 +147,14 @@ Vector Vector::operator / (const float rhs) {
 Vector Vector::operator / (const int rhs) {
    return Vector(x/rhs, y/rhs, z/rhs);
 }
-Vector Vector::cross(const Vector a) {
-   return Vector(y*a.z-z*a.y, z*a.x-x*a.z, x*a.y-y*a.x);
-}
+
 double Vector::mag2(){
    return x*x+y*y+z*z; 
 }
 double Vector::mag(){
    return sqrt(x*x+y*y+z*z); 
 }
-double Vector::dot(const Vector a){
-   return x*a.x+y*a.y+z*a.z;
-}
-Vector Vector::normalize(){
-   double m = mag();
-   return Vector(x/m, y/m, z/m); 
-}
 
-  
 Vector solveScalers(Vector v1, Vector v2, Vector v3, Vector C){
    double denom = v1.z*v2.y*v3.x-v1.y*v2.z*v3.x-v1.z*v2.x*v3.y+v1.x*v2.z*v3.y+v1.y*v2.x*v3.z-v1.x*v2.y*v3.z;
    double a = C.z*v2.y*v3.x-C.y*v2.z*v3.x-C.z*v2.x*v3.y+C.x*v2.z*v3.y+C.y*v2.x*v3.z-C.x*v2.y*v3.z;
