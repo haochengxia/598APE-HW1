@@ -1,7 +1,26 @@
-CONFIG ?= config0.mk # default config, no optimization
+# Default values for optimization flags
+ENABLE_OMP ?= 0
+ENABLE_BVH ?= 0
+ENABLE_SIMD ?= 0
+ENABLE_MPOOL ?= 0
+ENABLE_PRAY ?= 0
 
-# load config
-include config/$(CONFIG)
+# Add flags based on enabled optimizations
+ifeq ($(ENABLE_OMP), 1)
+    EXTRA_FLAGS += -DENABLE_OMP -fopenmp
+endif
+
+ifeq ($(ENABLE_BVH), 1)
+    EXTRA_FLAGS += -DENABLE_BVH
+endif
+
+ifeq ($(ENABLE_SIMD), 1)
+    EXTRA_FLAGS += -DENABLE_SIMD -mavx2
+endif
+
+ifeq ($(ENABLE_MPOOL), 1)
+    EXTRA_FLAGS += -DENABLE_MPOOL
+endif
 
 message:
 	@echo "CONFIG: $(CONFIG)"
@@ -9,7 +28,6 @@ message:
 	@echo "ENABLE_BVH: $(ENABLE_BVH)"
 	@echo "ENABLE_SIMD: $(ENABLE_SIMD)"
 	@echo "ENABLE_MPOOL: $(ENABLE_MPOOL)"
-	@echo "ENABLE_PRAY: $(ENABLE_PRAY)"
 	@echo "EXTRA_FLAGS: $(EXTRA_FLAGS)"
 
 FUNC := g++
