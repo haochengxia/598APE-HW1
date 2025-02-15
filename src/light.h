@@ -5,6 +5,10 @@
 #include "Textures/texture.h"
 #include "Textures/colortexture.h"
 
+#ifdef ENABLE_MPOOL
+#include "mempool.h"
+#endif
+
 class Light{
   public:
    unsigned char* color;
@@ -70,7 +74,15 @@ public:
    void removeShape(ShapeNode* s);
    void addLight(Light* s);
    void removeLight(LightNode* s);
+
+#ifdef ENABLE_MPOOL
+   static SimplePool nodePool;  // 一个pool同时处理shape和light节点
+#endif
 };
+
+#ifdef ENABLE_MPOOL
+SimplePool Autonoma::nodePool;
+#endif
 
 void getLight(double* toFill, Autonoma* aut, Vector point, Vector norm, unsigned char r);
 
