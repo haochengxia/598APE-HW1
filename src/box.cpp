@@ -29,3 +29,34 @@ bool Box::getLightIntersection(Ray ray, double* fill){
    fill[2]*=temp[2]/255.;
    return false;
 }
+
+void Box::getBoundingBox(Vector& min, Vector& max) const {
+    // 计算8个角点
+    Vector corners[8];
+    Vector halfRight = right * (textureX * 0.5);
+    Vector halfUp = up * (textureY * 0.5);
+    Vector halfNormal = vect * (textureX * 0.5); // 假设深度等于宽度
+
+    corners[0] = center + halfRight + halfUp + halfNormal;
+    corners[1] = center + halfRight + halfUp - halfNormal;
+    corners[2] = center + halfRight - halfUp + halfNormal;
+    corners[3] = center + halfRight - halfUp - halfNormal;
+    corners[4] = center - halfRight + halfUp + halfNormal;
+    corners[5] = center - halfRight + halfUp - halfNormal;
+    corners[6] = center - halfRight - halfUp + halfNormal;
+    corners[7] = center - halfRight - halfUp - halfNormal;
+
+    // 初始化包围盒
+    min = corners[0];
+    max = corners[0];
+
+    // 扩展包围盒以包含所有角点
+    for(int i = 1; i < 8; i++) {
+        min.x = std::min(min.x, corners[i].x);
+        min.y = std::min(min.y, corners[i].y);
+        min.z = std::min(min.z, corners[i].z);
+        max.x = std::max(max.x, corners[i].x);
+        max.y = std::max(max.y, corners[i].y);
+        max.z = std::max(max.z, corners[i].z);
+    }
+}
