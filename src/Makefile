@@ -17,6 +17,8 @@ all: $(SRC_DIR)texture $(OBJ_FILES)
 texture:
 	cd $(SRC_DIR)Textures && make
 
+	@echo "Start compiling src..."
+
 $(OBJ_DIR)vector.obj: $(SRC_DIR)vector.cpp $(SRC_DIR)vector.h
 	$(FUNC) $(output)$(OBJ_DIR)vector.obj $(copt) $(SRC_DIR)vector.cpp $(FLAGS)
 
@@ -58,6 +60,8 @@ $(OBJ_DIR)pictbox.obj: $(SRC_DIR)pictbox.cpp $(SRC_DIR)pictbox.h $(OBJ_DIR)box.o
 
 $(OBJ_DIR)disk.obj: $(SRC_DIR)disk.cpp $(SRC_DIR)disk.h $(OBJ_DIR)/plane.obj
 	$(FUNC) $(output)$(OBJ_DIR)disk.obj $(copt) $(SRC_DIR)disk.cpp $(FLAGS)
+
+	@echo "End compiling src..."
 
 clean:
 	cd Textures && make clean

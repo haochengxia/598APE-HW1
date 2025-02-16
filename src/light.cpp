@@ -34,76 +34,124 @@ Autonoma::Autonoma(const Camera& c, Texture* tex): camera(c){
    skybox = tex;
 }
 
-void Autonoma::addShape(Shape* r){
-   ShapeNode* hi = (ShapeNode*)malloc(sizeof(ShapeNode));
-   hi->data = r;
-   hi->next = hi->prev = NULL;
-   if(listStart==NULL){
-      listStart = listEnd = hi;
-   }
-   else{
-      listEnd->next = hi;
-      hi->prev = listEnd;
-      listEnd = hi;
-   }
+#ifdef ENABLE_MPOOL
+SimplePool Autonoma::nodePool;  // 定义静态内存池
+
+// 辅助函数，用于监控内存池使用情况
+void printPoolStats() {
+    size_t used = Autonoma::nodePool.getUsed();
+    size_t capacity = Autonoma::nodePool.getCapacity();
+    float frag = Autonoma::nodePool.getFragmentation();
+    printf("Memory pool stats:\n");
+    printf("- Used: %zu bytes\n", used);
+    printf("- Capacity: %zu bytes (%.2f%%)\n", capacity, (float)used/capacity*100);
+    printf("- Fragmentation: %.2f%%\n", frag * 100);
 }
 
-void Autonoma::removeShape(ShapeNode* s){
-   if(s==listStart){
-      if(s==listEnd){
-         listStart = listStart = NULL;
-      }
-      else{
-         listStart = s->next;
-         listStart->prev = NULL;
-      }
-   }
-   else if(s==listEnd){
-      listEnd = s->prev;
-      listEnd->next = NULL;
-   }
-   else{
-      ShapeNode *b4 = s->prev, *aft = s->next;
-      b4->next = aft;
-      aft->prev = b4;
-   }
-   free(s);
+// 辅助函数，在需要时进行内存压缩
+void checkAndCompact() {
+    if (Autonoma::nodePool.getFragmentation() > 0.3) {  // 碎片率超过30%时压缩
+        printf("High fragmentation detected, compacting memory pool...\n");
+        Autonoma::nodePool.compact();
+        printPoolStats();
+    }
+}
+#endif
+
+void Autonoma::addShape(Shape* r) {
+#ifdef ENABLE_MPOOL
+    ShapeNode* hi = static_cast<ShapeNode*>(nodePool.alloc(sizeof(ShapeNode)));
+    if (nodePool.getUsed() > nodePool.getCapacity() * 0.8) {  // 使用超过80%时
+        printf("Warning: Memory pool usage high\n");
+        printPoolStats();
+        checkAndCompact();  // 尝试压缩内存
+    }
+#else
+    ShapeNode* hi = (ShapeNode*)malloc(sizeof(ShapeNode));
+#endif
+    hi->data = r;
+    hi->next = hi->prev = NULL;
+    if(listStart==NULL) {
+        listStart = listEnd = hi;
+    } else {
+        listEnd->next = hi;
+        hi->prev = listEnd;
+        listEnd = hi;
+    }
 }
 
-void Autonoma::addLight(Light* r){
-   LightNode* hi = (LightNode*)malloc(sizeof(LightNode));
-   hi->data = r;
-   hi->next = hi->prev = NULL;
-   if(lightStart==NULL){
-      lightStart = lightEnd = hi;
-   }
-   else{
-      lightEnd->next = hi;
-      hi->prev = lightEnd;
-      lightEnd = hi;
-   }
+void Autonoma::removeShape(ShapeNode* s) {
+    if(s==listStart) {
+        if(s==listEnd) {
+            listStart = listStart = NULL;
+        } else {
+            listStart = s->next;
+            listStart->prev = NULL;
+        }
+    } else if(s==listEnd) {
+        listEnd = s->prev;
+        listEnd->next = NULL;
+    } else {
+        ShapeNode *b4 = s->prev, *aft = s->next;
+        b4->next = aft;
+        aft->prev = b4;
+    }
+#ifdef ENABLE_MPOOL
+    nodePool.dealloc(s);
+    if (nodePool.getFragmentation() > 0.3) {  // 删除操作后检查碎片率
+        checkAndCompact();
+    }
+#else
+    free(s);
+#endif
 }
 
-void Autonoma::removeLight(LightNode* s){
-   if(s==lightStart){
-      if(s==lightEnd){
-         lightStart = lightStart = NULL;
-      }
-      else{
-         lightStart = s->next;
-         lightStart->prev = NULL;
-      }
-   }
-   else if(s==lightEnd){
-      lightEnd = s->prev;
-      lightEnd->next = NULL;
-   }
-   else{
-      LightNode *b4 = s->prev, *aft = s->next;
-      b4->next = aft;
-      aft->prev = b4;
-   }
-   free(s);
+void Autonoma::addLight(Light* r) {
+#ifdef ENABLE_MPOOL
+    LightNode* hi = static_cast<LightNode*>(nodePool.alloc(sizeof(LightNode)));
+    if (nodePool.getUsed() > nodePool.getCapacity() * 0.8) {
+        printf("Warning: Memory pool usage high\n");
+        printPoolStats();
+        checkAndCompact();
+    }
+#else
+    LightNode* hi = (LightNode*)malloc(sizeof(LightNode));
+#endif
+    hi->data = r;
+    hi->next = hi->prev = NULL;
+    if(lightStart==NULL) {
+        lightStart = lightEnd = hi;
+    } else {
+        lightEnd->next = hi;
+        hi->prev = lightEnd;
+        lightEnd = hi;
+    }
+}
+
+void Autonoma::removeLight(LightNode* s) {
+    if(s==lightStart) {
+        if(s==lightEnd) {
+            lightStart = lightStart = NULL;
+        } else {
+            lightStart = s->next;
+            lightStart->prev = NULL;
+        }
+    } else if(s==lightEnd) {
+        lightEnd = s->prev;
+        lightEnd->next = NULL;
+    } else {
+        LightNode *b4 = s->prev, *aft = s->next;
+        b4->next = aft;
+        aft->prev = b4;
+    }
+#ifdef ENABLE_MPOOL
+    nodePool.dealloc(s);
+    if (nodePool.getFragmentation() > 0.3) {
+        checkAndCompact();
+    }
+#else
+    free(s);
+#endif
 }
 
 void getLight(double* tColor, Autonoma* aut, Vector point, Vector norm, unsigned char flip){
@@ -238,3 +286,4 @@ Shape* Autonoma::getIntersection(Ray r, double& time) {
     return result;
 }
 #endif
+

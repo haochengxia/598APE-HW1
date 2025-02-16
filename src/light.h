@@ -81,10 +81,6 @@ public:
 #endif
 };
 
-#ifdef ENABLE_MPOOL
-SimplePool Autonoma::nodePool;
-#endif
-
 void getLight(double* toFill, Autonoma* aut, Vector point, Vector norm, unsigned char r);
 
 #endif
