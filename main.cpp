@@ -13,7 +13,11 @@
 #include<stdlib.h>
 #include <string.h>
 #include <iostream>
+
+#ifdef ENABLE_OMP
 #include <omp.h>
+#endif
+
 using namespace std;
 
 #include <sys/time.h>
@@ -48,7 +52,7 @@ void set(int i, int j, unsigned char r, unsigned char g, unsigned char b){
 
 void refresh(Autonoma* c){
    #ifdef ENABLE_OMP
-   #pragma omp parallel for schedule(dynamic) private(ra)
+   #pragma omp parallel for schedule(dynamic)
    #endif
    for(int n = 0; n<H*W; ++n) 
    { 

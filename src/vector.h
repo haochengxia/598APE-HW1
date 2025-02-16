@@ -1,9 +1,3 @@
-#pragma once
-
-#ifdef ENABLE_SIMD
-#include <immintrin.h>
-#endif
-
 #ifndef __VECTOR_H_INCLUDED__
 #define __VECTOR_H_INCLUDED__
 #define _USE_MATH_DEFINES
@@ -14,12 +8,16 @@
 #include<limits>
 #define inf std::numeric_limits<double>::infinity()
 
+#ifdef ENABLE_SIMD
+#include <immintrin.h>
+#endif
+
 class Vector{
 public:
   double x, y, z;
-
-  Vector();
-  Vector(double x, double y, double z);
+  Vector() : x(0), y(0), z(0) {}
+  Vector(double a, double b, double c) : x(a), y(b), z(c) {}
+  
   
   void operator +=(const Vector);
   void operator -= (const Vector);
@@ -32,7 +30,7 @@ public:
   
   Vector operator + (const Vector) const;
   Vector operator - (const Vector) const;
-  Vector operator - () const;
+/*  Vector operator * (const Vector);*/
   Vector operator * (const double) const;
   Vector operator * (const float) const;
   Vector operator * (const int) const;
@@ -40,19 +38,16 @@ public:
   Vector operator / (const float) const;
   Vector operator / (const int) const;
   Vector cross(const Vector) const;
-  double mag2();
-  double mag();
+  double mag2() const;
+  double mag() const;
   double dot(const Vector) const;
   Vector normalize() const;
-
-  static Vector min(const Vector& a, const Vector& b);
-  static Vector max(const Vector& a, const Vector& b);
 } ;
 
 class Ray{
 public:
   Vector point, vector;
-  Ray(const Vector& po, const Vector& ve);
+  Ray(const Vector& po, const Vector& ve) : point(po), vector(ve) {}
 };
 
   inline Vector operator-(const Vector b){
@@ -96,3 +91,4 @@ int print_vector_arginfo (const struct printf_info *info, size_t n, int
 *argtypes);
 
 #endif
+

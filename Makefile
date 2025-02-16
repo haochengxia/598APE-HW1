@@ -22,13 +22,6 @@ ifeq ($(ENABLE_MPOOL), 1)
     EXTRA_FLAGS += -DENABLE_MPOOL
 endif
 
-message:
-	@echo "CONFIG: $(CONFIG)"
-	@echo "ENABLE_OMP: $(ENABLE_OMP)"
-	@echo "ENABLE_BVH: $(ENABLE_BVH)"
-	@echo "ENABLE_SIMD: $(ENABLE_SIMD)"
-	@echo "ENABLE_MPOOL: $(ENABLE_MPOOL)"
-	@echo "EXTRA_FLAGS: $(EXTRA_FLAGS)"
 
 FUNC := g++
 copt := -c 
@@ -49,3 +42,11 @@ clean:
 	cd ./src && make clean
 	rm -f ./*.exe
 	rm -f ./*.obj
+
+message:
+	@echo "CONFIG: $(CONFIG)"
+	@echo "ENABLE_OMP: $(ENABLE_OMP)"
+	@echo "ENABLE_BVH: $(ENABLE_BVH)"
+	@echo "ENABLE_SIMD: $(ENABLE_SIMD)"
+	@echo "ENABLE_MPOOL: $(ENABLE_MPOOL)"
+	@echo "EXTRA_FLAGS: $(EXTRA_FLAGS)"

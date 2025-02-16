@@ -16,15 +16,8 @@ all: $(SRC_DIR)texture $(OBJ_FILES)
 texture:
 	cd $(SRC_DIR)Textures && make
 
-ifeq ($(ENABLE_SIMD), 1)
-	@echo "SIMD is enabled for vector.cpp"
-	$(OBJ_DIR)vector.obj: $(SRC_DIR)vector.cpp $(SRC_DIR)vector.h
+$(OBJ_DIR)vector.obj: $(SRC_DIR)vector.cpp $(SRC_DIR)vector.h
 	$(FUNC) $(output)$(OBJ_DIR)vector.obj $(copt) $(SRC_DIR)vector.cpp $(FLAGS)
-else
-	@echo "SIMD is disabled for vector.cpp"
-	$(OBJ_DIR)vector.obj: $(SRC_DIR)vector.cpp $(SRC_DIR)vector.h
-	$(FUNC) $(output)$(OBJ_DIR)vector.obj $(copt) $(SRC_DIR)vector.cpp $(FLAGS)
-endif
 
 $(OBJ_DIR)mandel.obj: $(SRC_DIR)mandel.cpp $(SRC_DIR)mandel.h $(OBJ_DIR)box.obj
 	$(FUNC) $(output)$(OBJ_DIR)mandel.obj $(copt) $(SRC_DIR)mandel.cpp $(FLAGS)
