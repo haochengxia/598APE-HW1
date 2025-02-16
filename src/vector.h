@@ -14,7 +14,11 @@
 
 class Vector{
 public:
+    #ifdef ENABLE_SIMD
+    alignas(32) double x, y, z;
+    #else
     double x, y, z;
+    #endif
     Vector() : x(0), y(0), z(0) {}
     Vector(double a, double b, double c) : x(a), y(b), z(c) {}
     
