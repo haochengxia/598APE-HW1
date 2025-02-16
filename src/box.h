@@ -8,6 +8,7 @@ public:
   Box(const Vector &c, Texture* t, double ya, double pi, double ro, double tx);
   double getIntersection(Ray ray);
   bool getLightIntersection(Ray ray, double* fill);
+  void getBoundingBox(Vector& min, Vector& max) const override;
 };
 
 #endif

@@ -197,48 +197,51 @@ void Autonoma::buildBVH() {
     
     if (nodes.size() < 10) return;
     
-    // 递归构建函数
-    std::function<BVHNode*(std::vector<ShapeNode*>&)> build = 
-        [](std::vector<ShapeNode*>& shapes) -> BVHNode* {
+    std::function<BVHNode*(std::vector<ShapeNode*>&, int axis)> build = 
+        [&](std::vector<ShapeNode*>& shapes, int axis) -> BVHNode* {
         if (shapes.empty()) return nullptr;
-        if (shapes.size() <= 4) {  // 少量物体直接作为叶子节点
-            BVHNode* leaf = new BVHNode();
-            leaf->shapes = shapes;
-            
-            // 计算叶子节点的包围盒
-            for (auto node : shapes) {
-                Vector pos = node->shape->position;
-                leaf->bounds.min = Vector::min(leaf->bounds.min, pos - 1);  // 简单地扩展1个单位
-                leaf->bounds.max = Vector::max(leaf->bounds.max, pos + 1);
-            }
-            return leaf;
-        }
         
         BVHNode* node = new BVHNode();
         
-        // 简单地按中点分割
-        auto mid = shapes.size() / 2;
-        std::vector<ShapeNode*> left_shapes(shapes.begin(), shapes.begin() + mid);
-        std::vector<ShapeNode*> right_shapes(shapes.begin() + mid, shapes.end());
-        
-        // 递归构建子树
-        node->left = build(left_shapes);
-        node->right = build(right_shapes);
-        
-        // 合并子节点的包围盒
-        if (node->left) {
-            node->bounds.min = Vector::min(node->bounds.min, node->left->bounds.min);
-            node->bounds.max = Vector::max(node->bounds.max, node->left->bounds.max);
+        // 计算当前节点的包围盒
+        for (auto shape : shapes) {
+            Vector shapeMin, shapeMax;
+            shape->data->getBoundingBox(shapeMin, shapeMax);
+            node->bounds.min = Vector::min(node->bounds.min, shapeMin);
+            node->bounds.max = Vector::max(node->bounds.max, shapeMax);
         }
-        if (node->right) {
-            node->bounds.min = Vector::min(node->bounds.min, node->right->bounds.min);
-            node->bounds.max = Vector::max(node->bounds.max, node->right->bounds.max);
+        
+        if (shapes.size() <= 4) {
+            node->shapes = shapes;
+            return node;
         }
+        
+        // 计算当前包围盒的中心点
+        Vector centroid = (node->bounds.max + node->bounds.min) * 0.5;
+        
+        // 按当前轴相对于包围盒中心的位置排序
+        std::sort(shapes.begin(), shapes.end(),
+            [axis, &centroid](const ShapeNode* a, const ShapeNode* b) {
+                double a_pos = (axis == 0) ? a->data->center.x - centroid.x :
+                             (axis == 1) ? a->data->center.y - centroid.y :
+                                          a->data->center.z - centroid.z;
+                double b_pos = (axis == 0) ? b->data->center.x - centroid.x :
+                             (axis == 1) ? b->data->center.y - centroid.y :
+                                          b->data->center.z - centroid.z;
+                return a_pos < b_pos;
+            });
+        
+        size_t mid = shapes.size() / 2;
+        std::vector<ShapeNode*> leftShapes(shapes.begin(), shapes.begin() + mid);
+        std::vector<ShapeNode*> rightShapes(shapes.begin() + mid, shapes.end());
+        
+        node->left = build(leftShapes, (axis + 1) % 3);
+        node->right = build(rightShapes, (axis + 1) % 3);
         
         return node;
     };
     
-    bvh_root = build(nodes);
+    bvh_root = build(nodes, 0);
 }
 
 Shape* Autonoma::getIntersection(Ray r, double& time) {
@@ -246,19 +249,20 @@ Shape* Autonoma::getIntersection(Ray r, double& time) {
     if (bvh_root) {
         time = INFINITY;
         
-        // 递归遍历函数
+        // 递归遍历BVH树
         std::function<Shape*(BVHNode*, double&)> traverse = 
             [&](BVHNode* node, double& min_time) -> Shape* {
-            if (!node || !node->bounds.intersect(r)) return nullptr;
+            if (!node || !node->bounds.intersect(r)) 
+                return nullptr;
             
-            // 叶子节点
+            // 叶子节点：检查所有形状
             if (!node->shapes.empty()) {
                 Shape* result = nullptr;
                 for (auto shape_node : node->shapes) {
-                    double t = shape_node->shape->getIntersection(r);
+                    double t = shape_node->data->getIntersection(r);
                     if (t < min_time) {
                         min_time = t;
-                        result = shape_node->shape;
+                        result = shape_node->data;
                     }
                 }
                 return result;
@@ -267,20 +271,23 @@ Shape* Autonoma::getIntersection(Ray r, double& time) {
             // 内部节点：递归遍历
             Shape* left_hit = traverse(node->left, min_time);
             Shape* right_hit = traverse(node->right, min_time);
-            return (min_time == INFINITY) ? nullptr : (left_hit ? left_hit : right_hit);
+            
+            return (min_time == INFINITY) ? nullptr : 
+                   (left_hit ? left_hit : right_hit);
         };
         
         return traverse(bvh_root, time);
     }
     #endif
 
-    // 原始的线性搜索
+    // 如果没有启用BVH或BVH树为空，使用线性搜索
     Shape* result = nullptr;
+    time = INFINITY;
     for(ShapeNode* node = listStart; node != nullptr; node = node->next) {
-        double t = node->shape->getIntersection(r);
+        double t = node->data->getIntersection(r);
         if(t < time) {
             time = t;
-            result = node->shape;
+            result = node->data;
         }
     }
     return result;

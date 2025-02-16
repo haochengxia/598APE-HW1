@@ -20,6 +20,11 @@ class Shape{
    virtual void setYaw(double d) = 0;
    virtual void setPitch(double d) = 0;
    virtual void setRoll(double d) = 0;
+   virtual void getBoundingBox(Vector& min, Vector& max) const {
+       // 默认实现：以center为中心的单位包围盒
+       min = center - Vector(1, 1, 1);
+       max = center + Vector(1, 1, 1);
+   }
 };
 
 void calcColor(unsigned char* toFill, Autonoma*, Ray ray, unsigned int depth);

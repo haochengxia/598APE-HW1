@@ -16,5 +16,9 @@ public:
   void setYaw(double a);
   void setPitch(double b);
   void setRoll(double c);
+  void getBoundingBox(Vector& min, Vector& max) const override {
+    min = center - Vector(radius, radius, radius);
+    max = center + Vector(radius, radius, radius);
+  }
 };
 #endif
