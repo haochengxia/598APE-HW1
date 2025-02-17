@@ -46,10 +46,22 @@ void set(int i, int j, unsigned char r, unsigned char g, unsigned char b){
 }
 
 void refresh(Autonoma* c){
+   
+   #ifdef ENABLE_OMP
+   #pragma omp parallel for schedule(dynamic)
+   #endif
    for(int n = 0; n<H*W; ++n) 
    { 
+      Shape::resetDepth();
+      struct timeval start, end;
+      gettimeofday(&start, NULL);
       Vector ra = c->camera.forward+((double)(n%W)/W-.5)*((c->camera.right))+(.5-(double)(n/W)/H)*((c->camera.up));
       calcColor(&DATA[3*n], c, Ray(c->camera.focus, ra), 0);
+      gettimeofday(&end, NULL);
+      double time = tdiff(&start, &end);
+      // if (Shape::getMaxDepth() > 10) {
+      //    printf("time: %f, max depth: %d\n", time, Shape::getMaxDepth());
+      // }
    }
 }
 

@@ -1,5 +1,14 @@
 # 598APE-HW1
 
+This repository contains optimized code for homework 1 of 598APE.
+
+You can select features by editing the Makefile, all optimizations are enabled by defaults.
+
+----
+# Upstream
+
+# 598APE-HW1
+
 This repository contains code for homework 1 of 598APE.
 
 In particular, this repository is an implementation of a Raytracer.

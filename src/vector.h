@@ -11,6 +11,7 @@
 class Vector{
 public:
   double x, y, z;
+  Vector() : x(0), y(0), z(0) {} 
   Vector(double a, double b, double c);
   
   
@@ -37,6 +38,15 @@ public:
   double mag();
   double dot(const Vector a);
   Vector normalize();
+
+#ifdef ENABLE_INPLACE
+  inline void addScaled(const Vector& other, double factor) noexcept {
+    x += other.x * factor;
+    y += other.y * factor;
+    z += other.z * factor;
+  }
+#endif
+
 } ;
 
 class Ray{

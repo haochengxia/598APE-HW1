@@ -1,0 +1,3 @@
+convert-im6.q16: iCCP: profile 'Dot Gain 20%': 'GRAY': Gray color space not permitted on RGB PNG `images/EarthNormalMap.png' @ warning/png.c/MagickPNGWarningHandler/1668.
+Done Frame       0|
+Total time to create images=2.181111 seconds
