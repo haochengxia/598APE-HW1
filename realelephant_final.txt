@@ -1,2 +1,0 @@
-Done Frame       0|
-Total time to create images=29.318691 seconds
