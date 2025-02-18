@@ -4,6 +4,8 @@ This repository contains optimized code for homework 1 of 598APE.
 
 You can select features by editing the Makefile, all optimizations are enabled by defaults.
 
+All the scripts needed for reproducing can be found in [ae](./ae).
+
 ----
 # Upstream
 
